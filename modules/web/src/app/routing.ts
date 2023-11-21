@@ -17,7 +17,7 @@ import {PreloadingStrategy, Route, RouterModule, Routes} from '@angular/router';
 import {AdminGuard} from '@core/services/auth/guard';
 import {Observable, of} from 'rxjs';
 import {DashboardComponent} from './dashboard/component';
-import { DynamicModule } from './dynamic/module-registry';
+import {DynamicModule} from './dynamic/module-registry';
 
 class SelectedPreloadingStrategy implements PreloadingStrategy {
   preload(route: Route, load: Function): Observable<any> {
