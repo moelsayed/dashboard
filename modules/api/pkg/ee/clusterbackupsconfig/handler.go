@@ -12,7 +12,6 @@ import (
 
 	apiv2 "k8c.io/dashboard/v2/pkg/api/v2"
 	handlercommon "k8c.io/dashboard/v2/pkg/handler/common"
-	"k8c.io/dashboard/v2/pkg/handler/middleware"
 	"k8c.io/dashboard/v2/pkg/handler/v1/common"
 	"k8c.io/dashboard/v2/pkg/handler/v2/cluster"
 	"k8c.io/dashboard/v2/pkg/provider"
@@ -47,7 +46,7 @@ func CreateEndpoint(ctx context.Context, request interface{}, userInfoGetter pro
 		},
 		Spec: *req.Body.Spec.DeepCopy(),
 	}
-	client, err := getClusterClient(ctx, userInfoGetter, projectProvider, privilegedProjectProvider, req.ProjectID, req.ClusterID)
+	client, err := handlercommon.GetClusterClientWithClusterID(ctx, userInfoGetter, projectProvider, privilegedProjectProvider, req.ProjectID, req.ClusterID)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +84,7 @@ func ListEndpoint(ctx context.Context, request interface{}, userInfoGetter provi
 	privilegedProjectProvider provider.PrivilegedProjectProvider) (interface{}, error) {
 	req := request.(listClusterBackupConfigReq)
 
-	client, err := getClusterClient(ctx, userInfoGetter, projectProvider, privilegedProjectProvider, req.ProjectID, req.ClusterID)
+	client, err := handlercommon.GetClusterClientWithClusterID(ctx, userInfoGetter, projectProvider, privilegedProjectProvider, req.ProjectID, req.ClusterID)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +116,7 @@ func GetEndpoint(ctx context.Context, request interface{}, userInfoGetter provid
 	privilegedProjectProvider provider.PrivilegedProjectProvider) (interface{}, error) {
 	req := request.(getClusterBackupConfigReq)
 
-	client, err := getClusterClient(ctx, userInfoGetter, projectProvider, privilegedProjectProvider, req.ProjectID, req.ClusterID)
+	client, err := handlercommon.GetClusterClientWithClusterID(ctx, userInfoGetter, projectProvider, privilegedProjectProvider, req.ProjectID, req.ClusterID)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +156,7 @@ func DecodeGetClusterBackupConfigReq(c context.Context, r *http.Request) (interf
 func DeleteEndpoint(ctx context.Context, request interface{}, userInfoGetter provider.UserInfoGetter, projectProvider provider.ProjectProvider,
 	privilegedProjectProvider provider.PrivilegedProjectProvider) (interface{}, error) {
 	req := request.(deleteClusterBackupConfigReq)
-	client, err := getClusterClient(ctx, userInfoGetter, projectProvider, privilegedProjectProvider, req.ProjectID, req.ClusterID)
+	client, err := handlercommon.GetClusterClientWithClusterID(ctx, userInfoGetter, projectProvider, privilegedProjectProvider, req.ProjectID, req.ClusterID)
 	if err != nil {
 		return nil, err
 	}
@@ -209,21 +208,6 @@ func DecodeListProjectClustersBackupConfigReq(c context.Context, r *http.Request
 	req.ProjectReq = pr.(common.ProjectReq)
 
 	return req, nil
-}
-
-func getClusterClient(ctx context.Context, userInfoGetter provider.UserInfoGetter, projectProvider provider.ProjectProvider,
-	privilegedProjectProvider provider.PrivilegedProjectProvider, projectID, clusterID string) (ctrlruntimeclient.Client, error) {
-	clusterProvider := ctx.Value(middleware.ClusterProviderContextKey).(provider.ClusterProvider)
-	cluster, err := handlercommon.GetCluster(ctx, projectProvider, privilegedProjectProvider, userInfoGetter, projectID, clusterID, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	client, err := common.GetClusterClient(ctx, userInfoGetter, clusterProvider, cluster, projectID)
-	if err != nil {
-		return nil, common.KubernetesErrorToHTTPError(err)
-	}
-	return client, nil
 }
 
 func submitBackupDeleteRequest(ctx context.Context, client ctrlruntimeclient.Client, clusterBackupConfigID string) error {
