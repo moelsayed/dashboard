@@ -65,7 +65,6 @@ func createImpersonationClientWrapperFromUserInfo(userInfo *provider.UserInfo, c
 		UserName: userInfo.Email,
 		Groups:   userInfo.Groups,
 	}
-
 	return createImpersonationClient(impersonationCfg)
 }
 

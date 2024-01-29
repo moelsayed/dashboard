@@ -129,6 +129,9 @@ const (
 
 	UserCRContextKey                            = kubermaticcontext.UserCRContextKey
 	SeedsGetterContextKey kubermaticcontext.Key = "seeds-getter"
+
+	PrivilegedCBSLProviderContextKey = "privileged-cbsl-provider"
+	CBSLProviderContextKey           = "cbsl-provider"
 )
 
 // Now stubbed out to allow testing.
@@ -837,6 +840,49 @@ func getEtcdBackupConfigProjectProvider(etcdBackupConfigProjectProviderGetter pr
 	}
 
 	return etcdBackupConfigProjectProviderGetter(seeds)
+}
+
+func CBSLProject(clusterBackupStorageLocationProviderGetter provider.CBSLProviderGetter, seedsGetter provider.SeedsGetter) endpoint.Middleware {
+	return func(next endpoint.Endpoint) endpoint.Endpoint {
+		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+			cbslProvider, err := getCBSLProvider(clusterBackupStorageLocationProviderGetter, seedsGetter)
+			if err != nil {
+				return nil, err
+			}
+			ctx = context.WithValue(ctx, CBSLProviderContextKey, cbslProvider)
+			return next(ctx, request)
+		}
+	}
+}
+func getCBSLProvider(clusterBackupStorageLocationProviderGetter provider.CBSLProviderGetter, seedsGetter provider.SeedsGetter) (provider.ClusterBackupStorageLocationProvider, error) {
+	seeds, err := seedsGetter()
+	if err != nil {
+		return nil, err
+	}
+
+	return clusterBackupStorageLocationProviderGetter(seeds)
+}
+
+func PrivilegedCBSLProject(privilegedClusterBackupStorageLocationProviderGetter provider.PrivilegedCBSLProviderGetter, seedsGetter provider.SeedsGetter) endpoint.Middleware {
+	return func(next endpoint.Endpoint) endpoint.Endpoint {
+		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+			privilegedCBSLProvider, err := getPrivilegedCBSLProvider(privilegedClusterBackupStorageLocationProviderGetter, seedsGetter)
+			if err != nil {
+				return nil, err
+			}
+			ctx = context.WithValue(ctx, PrivilegedCBSLProviderContextKey, privilegedCBSLProvider)
+			return next(ctx, request)
+		}
+	}
+}
+
+func getPrivilegedCBSLProvider(privilegedClusterBackupStorageLocationProviderGetter provider.PrivilegedCBSLProviderGetter, seedsGetter provider.SeedsGetter) (provider.PrivilegedClusterBackupStorageLocationProvider, error) {
+	seeds, err := seedsGetter()
+	if err != nil {
+		return nil, err
+	}
+
+	return privilegedClusterBackupStorageLocationProviderGetter(seeds)
 }
 
 // EtcdRestoreProject is a middleware that injects the current EtcdRestoreProjectProvider into the ctx.

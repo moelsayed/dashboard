@@ -23,6 +23,7 @@ import (
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
 
+	backuplocation "k8c.io/dashboard/v2/pkg/ee/clusterbackup/location"
 	"k8c.io/dashboard/v2/pkg/handler"
 	"k8c.io/dashboard/v2/pkg/handler/middleware"
 	"k8c.io/dashboard/v2/pkg/handler/v1/common"
@@ -1347,6 +1348,11 @@ func (r Routing) RegisterV2(mux *mux.Router, oidcKubeConfEndpoint bool) {
 	mux.Methods(http.MethodDelete).
 		Path("/projects/{project_id}/clusters/{cluster_id}/clusterbackupschedule/{clusterBackupSchedule}").
 		Handler(r.deleteClusterBackupSchedule())
+
+	// Defines a set of HTTP endpoints for managing cluster backup storage locations
+	mux.Methods(http.MethodGet).
+		Path("/projects/{project_id}/clusterbackupstoragelocations").
+		Handler(r.listClusterBackupStorageLocation())
 
 	// Defines a set of HTTP endpoints for managing etcd backup configs
 	mux.Methods(http.MethodPost).
@@ -7825,6 +7831,20 @@ func (r Routing) deleteClusterBackupSchedule() http.Handler {
 			middleware.SetClusterProvider(r.clusterProviderGetter, r.seedsGetter),
 			middleware.SetPrivilegedClusterProvider(r.clusterProviderGetter, r.seedsGetter))(clusterbackupschedule.DeleteEndpoint(r.userInfoGetter, r.projectProvider, r.privilegedProjectProvider, r.settingsProvider)),
 		clusterbackupschedule.DecodeDeleteClusterBackupScheduleReq,
+		handler.EncodeJSON,
+		r.defaultServerOptions()...,
+	)
+}
+
+func (r Routing) listClusterBackupStorageLocation() http.Handler {
+	return httptransport.NewServer(
+		endpoint.Chain(
+			middleware.TokenVerifier(r.tokenVerifiers, r.userProvider),
+			middleware.UserSaver(r.userProvider),
+			middleware.CBSLProject(r.clusterBackupStorageLocationProviderGetter, r.seedsGetter),
+			// middleware.PrivilegedCBSLProject(r.clusterBackupStorageLocationProviderGetter, r.seedsGetter),
+		)(backuplocation.ListEndpoint(r.userInfoGetter, r.projectProvider, r.privilegedProjectProvider)),
+		backuplocation.DecodeListCBSLReq,
 		handler.EncodeJSON,
 		r.defaultServerOptions()...,
 	)

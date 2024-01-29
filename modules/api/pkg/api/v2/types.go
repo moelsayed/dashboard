@@ -286,6 +286,12 @@ type ClusterBackupSchedule struct {
 	Spec velerov1.ScheduleSpec `json:"spec,omitempty"`
 }
 
+type ClusterBackupStorageLocation struct {
+	Name   string                               `json:"name,omitempty"`
+	Spec   velerov1.BackupStorageLocationSpec   `json:"spec,omitempty"`
+	Status velerov1.BackupStorageLocationStatus `json:"status"`
+}
+
 // EtcdBackupConfig represents an object holding the configuration for etcd backups
 // swagger:model EtcdBackupConfig
 type EtcdBackupConfig struct {

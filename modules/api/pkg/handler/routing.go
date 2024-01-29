@@ -222,6 +222,8 @@ type RoutingParams struct {
 	EtcdRestoreProviderGetter                      provider.EtcdRestoreProviderGetter
 	EtcdBackupConfigProjectProviderGetter          provider.EtcdBackupConfigProjectProviderGetter
 	EtcdRestoreProjectProviderGetter               provider.EtcdRestoreProjectProviderGetter
+	CBSLProviderGetter                             provider.CBSLProviderGetter
+	PrivilegedCBSLProviderGetter                   provider.PrivilegedCBSLProviderGetter
 	BackupCredentialsProviderGetter                provider.BackupCredentialsProviderGetter
 	PrivilegedMLAAdminSettingProviderGetter        provider.PrivilegedMLAAdminSettingProviderGetter
 	SeedProvider                                   provider.SeedProvider

@@ -110,6 +110,10 @@ type EtcdRestoreProviderGetter = func(seed *kubermaticv1.Seed) (EtcdRestoreProvi
 // EtcdRestoreProjectProviderGetter is used to get a EtcdRestoreProjectProvider.
 type EtcdRestoreProjectProviderGetter = func(seeds map[string]*kubermaticv1.Seed) (EtcdRestoreProjectProvider, error)
 
+type CBSLProviderGetter = func(seeds map[string]*kubermaticv1.Seed) (ClusterBackupStorageLocationProvider, error)
+
+type PrivilegedCBSLProviderGetter = func(seeds map[string]*kubermaticv1.Seed) (PrivilegedClusterBackupStorageLocationProvider, error)
+
 // BackupCredentialsProviderGetter is used to get a BackupCredentialsProvider.
 type BackupCredentialsProviderGetter = func(seed *kubermaticv1.Seed) (BackupCredentialsProvider, error)
 
@@ -1347,4 +1351,16 @@ type ApplicationDefinitionProvider interface {
 type PrivilegedOperatingSystemProfileProvider interface {
 	// List returns a list of OperatingSystemProfiles for the KKP installation.
 	ListUnsecured(context.Context) (*osmv1alpha1.OperatingSystemProfileList, error)
+}
+
+type ClusterBackupStorageLocationProvider interface {
+	List(ctx context.Context, userInfo *UserInfo, options CSBSLListOptions) ([]kubermaticv1.ClusterBackupStorageLocation, error)
+}
+
+type PrivilegedClusterBackupStorageLocationProvider interface {
+	ListUnsecured(ctx context.Context, options CSBSLListOptions) ([]kubermaticv1.ClusterBackupStorageLocation, error)
+}
+
+type CSBSLListOptions struct {
+	ProjectID string
 }
