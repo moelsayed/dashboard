@@ -39,6 +39,7 @@ import (
 	clusterbackup "k8c.io/dashboard/v2/pkg/handler/v2/clusterbackup/backup"
 	clusterrestore "k8c.io/dashboard/v2/pkg/handler/v2/clusterbackup/restore"
 	clusterbackupschedule "k8c.io/dashboard/v2/pkg/handler/v2/clusterbackup/schedule"
+	storagelocation "k8c.io/dashboard/v2/pkg/handler/v2/clusterbackup/storage-location"
 	"k8c.io/dashboard/v2/pkg/handler/v2/cniversion"
 	"k8c.io/dashboard/v2/pkg/handler/v2/constraint"
 	constrainttemplate "k8c.io/dashboard/v2/pkg/handler/v2/constraint_template"
@@ -1347,6 +1348,28 @@ func (r Routing) RegisterV2(mux *mux.Router, oidcKubeConfEndpoint bool) {
 	mux.Methods(http.MethodDelete).
 		Path("/projects/{project_id}/clusters/{cluster_id}/clusterbackupschedule/{clusterBackupSchedule}").
 		Handler(r.deleteClusterBackupSchedule())
+
+	// Defines a set of HTTP endpoints for managing cluster backup storage locations
+
+	mux.Methods(http.MethodGet).
+		Path("/projects/{project_id}/clusterbackupstoragelocation").
+		Handler(r.listProjectCBSL())
+
+	mux.Methods(http.MethodGet).
+		Path("/projects/{project_id}/clusterbackupstoragelocation/{clusterBackupStorageLocation}").
+		Handler(r.getCBSL())
+
+	mux.Methods(http.MethodPost).
+		Path("/projects/{project_id}/clusterbackupstoragelocation").
+		Handler(r.createCBSL())
+
+	mux.Methods(http.MethodDelete).
+		Path("/projects/{project_id}/clusterbackupstoragelocation/{clusterBackupStorageLocation}").
+		Handler(r.deleteCBSL())
+
+	mux.Methods(http.MethodPut).
+		Path("/projects/{project_id}/clusterbackupstoragelocation/{clusterBackupStorageLocation}").
+		Handler(r.updateCBSL())
 
 	// Defines a set of HTTP endpoints for managing etcd backup configs
 	mux.Methods(http.MethodPost).
@@ -7827,6 +7850,51 @@ func (r Routing) deleteClusterBackupSchedule() http.Handler {
 		clusterbackupschedule.DecodeDeleteClusterBackupScheduleReq,
 		handler.EncodeJSON,
 		r.defaultServerOptions()...,
+	)
+}
+
+func (r Routing) listProjectCBSL() http.Handler {
+	return httptransport.NewServer(
+		endpoint.Chain(
+			middleware.TokenVerifier(r.tokenVerifiers, r.userProvider),
+			middleware.UserSaver(r.userProvider),
+		)(storagelocation.ListCBSLEndpoint(r.userInfoGetter, r.backupStorageProvider, r.projectProvider)), storagelocation.DecodeListProjectCBSLReq, handler.EncodeJSON, r.defaultServerOptions()...,
+	)
+}
+
+func (r Routing) getCBSL() http.Handler {
+	return httptransport.NewServer(
+		endpoint.Chain(
+			middleware.TokenVerifier(r.tokenVerifiers, r.userProvider),
+			middleware.UserSaver(r.userProvider),
+		)(storagelocation.GetCBSLEndpoint(r.userInfoGetter, r.backupStorageProvider, r.projectProvider)), storagelocation.DecodeGetCBSLReq, handler.EncodeJSON, r.defaultServerOptions()...,
+	)
+}
+
+func (r Routing) createCBSL() http.Handler {
+	return httptransport.NewServer(
+		endpoint.Chain(
+			middleware.TokenVerifier(r.tokenVerifiers, r.userProvider),
+			middleware.UserSaver(r.userProvider),
+		)(storagelocation.CreateCBSLEndpoint(r.userInfoGetter, r.backupStorageProvider, r.projectProvider)), storagelocation.DecodeCreateCBSLReq, handler.EncodeJSON, r.defaultServerOptions()...,
+	)
+}
+
+func (r Routing) deleteCBSL() http.Handler {
+	return httptransport.NewServer(
+		endpoint.Chain(
+			middleware.TokenVerifier(r.tokenVerifiers, r.userProvider),
+			middleware.UserSaver(r.userProvider),
+		)(storagelocation.DeleteCBSLEndpoint(r.userInfoGetter, r.backupStorageProvider, r.projectProvider)), storagelocation.DecodeDeleteCBSLReq, handler.EncodeJSON, r.defaultServerOptions()...,
+	)
+}
+
+func (r Routing) updateCBSL() http.Handler {
+	return httptransport.NewServer(
+		endpoint.Chain(
+			middleware.TokenVerifier(r.tokenVerifiers, r.userProvider),
+			middleware.UserSaver(r.userProvider),
+		)(storagelocation.UpdateCBSLEndpoint(r.userInfoGetter, r.backupStorageProvider, r.projectProvider)), storagelocation.DecodeUpdateCBSLReq, handler.EncodeJSON, r.defaultServerOptions()...,
 	)
 }
 
